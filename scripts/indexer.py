@@ -16,9 +16,15 @@ from typing import List
 from FlagEmbedding import FlagModel
 
 # ============ 配置 ============
+# Path resolution: this script lives at <repo>/scripts/indexer.py, so the repo
+# root is one level up from __file__. NOTES_DB stays in the user's home as
+# user data, but the index and sync state belong to the repo so they move with
+# the clone.
+from pathlib import Path
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 NOTES_DB = os.path.expanduser("~/notes.db")
-CHROMA_DB = os.path.expanduser("~/Documents/apple-notes-mcp/chroma_db")
-LAST_SYNC_FILE = os.path.expanduser("~/Documents/apple-notes-mcp/.last_sync")
+CHROMA_DB = str(_REPO_ROOT / "chroma_db")
+LAST_SYNC_FILE = str(_REPO_ROOT / ".last_sync")
 
 # ============ BGE-M3 嵌入函数 ============
 class BGEEmbeddingFunction(EmbeddingFunction):
@@ -108,9 +114,11 @@ def incremental_index():
     tables = [row[0] for row in cursor.fetchall()]
     print(f"📋 数据库表: {', '.join(tables)}")
 
-    # 查询变更的笔记
+    # 查询变更的笔记（包含 folder 和 tags）
     cursor = conn.execute("""
-        SELECT id, title, body, created, updated
+        SELECT id, title, body, created, updated,
+               COALESCE(folder, '') as folder,
+               COALESCE(tags, '') as tags
         FROM notes
         WHERE updated > ?
         ORDER BY updated DESC
@@ -127,7 +135,7 @@ def incremental_index():
 
     # 批量更新到 ChromaDB
     indexed_count = 0
-    for note_id, title, body, created, updated in changed_notes:
+    for note_id, title, body, created, updated, folder, tags in changed_notes:
         # 清理 HTML 标签
         clean_body = clean_html(body)
 
@@ -141,11 +149,13 @@ def incremental_index():
         if not content.strip():
             continue
 
-        # 准备元数据
+        # 准备元数据（含 folder 和 tags）
         metadata = {
             "title": title or "(无标题)",
             "created": created or "",
-            "updated": updated or ""
+            "updated": updated or "",
+            "folder": folder,
+            "tags": tags
         }
 
         try:
@@ -179,7 +189,12 @@ def full_index():
         return
 
     conn = sqlite3.connect(NOTES_DB)
-    cursor = conn.execute("SELECT id, title, body, created, updated FROM notes")
+    cursor = conn.execute("""
+        SELECT id, title, body, created, updated,
+               COALESCE(folder, '') as folder,
+               COALESCE(tags, '') as tags
+        FROM notes
+    """)
 
     all_notes = cursor.fetchall()
     print(f"📊 总共 {len(all_notes)} 条笔记")
@@ -199,7 +214,7 @@ def full_index():
         documents = []
         metadatas = []
 
-        for note_id, title, body, created, updated in batch:
+        for note_id, title, body, created, updated, folder, tags in batch:
             # 清理 HTML 标签
             clean_body = clean_html(body)
 
@@ -218,7 +233,9 @@ def full_index():
             metadatas.append({
                 "title": title or "(无标题)",
                 "created": created or "",
-                "updated": updated or ""
+                "updated": updated or "",
+                "folder": folder,
+                "tags": tags
             })
             indexed_count += 1
 

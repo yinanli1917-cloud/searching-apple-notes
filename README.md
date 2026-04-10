@@ -16,12 +16,20 @@ Turn your Apple Notes into a searchable knowledge base powered by AI. Instead of
 
 ### Features
 
+- **Claude Code Skill** *(recommended)*: Drop-in skill that lets Claude Code search and write your Apple Notes from any conversation, with built-in search strategy and dialogue-to-note workflow
 - **Semantic Search**: Understands meaning, not just keywords
-- **Chinese Optimized**: 87% accuracy on Chinese text
+- **Chinese Optimized**: BGE-M3 embedding model handles Chinese-English mixed content natively
 - **Multi-language**: Supports 100+ languages
-- **Privacy First**: All data stays local (optional cloud deploy)
-- **Claude Desktop Integration**: Works seamlessly with Claude
-- **Poke AI Integration**: Search your notes via iMessage (NEW!)
+- **Privacy First**: All data stays local — no API keys, no third-party servers
+- **MCP Server** *(alternative)*: For Claude Desktop and Poke AI users who don't use Claude Code
+
+### Two ways to use this
+
+**1. As a Claude Code Skill — recommended.** This is the primary path. The skill teaches Claude Code *when* to search, *how* to phrase queries, *how* to interpret results, and *when* to save new insights back into Apple Notes. You install it once, then talk to Claude normally — no commands, no tool calls, no search box.
+
+→ **[Read the skill docs and install instructions](skills/searching-apple-notes/README.md)**
+
+**2. As an MCP server — for non-Claude-Code users.** If you use Claude Desktop, Cursor, or Poke AI on iMessage, the MCP server in `scripts/server.py` exposes the same search functionality as MCP tools. The MCP path is no longer my primary use case — I still accept PRs and bug reports, but new development happens in the Skill. See the Claude Desktop and Poke AI sections below for MCP setup.
 
 ### Quick Start
 
@@ -150,12 +158,20 @@ MIT License © 2025 [Yinan Li](https://github.com/yinanli1917-cloud)
 
 ### 特性
 
+- **Claude Code 技能包** *（推荐）*：开箱即用的技能包，让 Claude Code 在任何对话中都能搜索和写入你的 Apple Notes，内置搜索策略和"对话→笔记"工作流
 - **语义搜索**：理解含义，而不仅仅是关键词匹配
-- **中文优化**：针对中文优化，准确率 87%
+- **中文优化**：BGE-M3 嵌入模型原生支持中英文混合内容
 - **多语言支持**：支持 100+ 种语言
-- **隐私优先**：数据保存在本地（可选云端部署）
-- **Claude Desktop 集成**：与 Claude 无缝配合
-- **Poke AI 集成**：通过 iMessage 搜索笔记（新功能！）
+- **隐私优先**：数据全部保存在本地——不需要 API key，不依赖任何第三方服务器
+- **MCP 服务器** *（备选）*：给那些不用 Claude Code、而是用 Claude Desktop 或 Poke AI 的用户
+
+### 两种使用方式
+
+**1. 作为 Claude Code 技能包——推荐方案。** 这是主要的使用路径。技能包教 Claude Code **什么时候**该搜、**怎么**写查询、**怎么**理解返回结果、**什么时候**该把新洞察写回 Apple Notes。装一次，之后就正常跟 Claude 对话——不用命令，不用工具调用，不用搜索框。
+
+→ **[查看技能包文档和安装说明](skills/searching-apple-notes/README.md)**
+
+**2. 作为 MCP 服务器——给不用 Claude Code 的用户。** 如果你用的是 Claude Desktop、Cursor 或者 iMessage 上的 Poke AI，`scripts/server.py` 里的 MCP 服务器把同样的搜索功能暴露成 MCP 工具。MCP 这条路径已经不是我目前的主要使用场景——我仍然接受 PR 和 bug 报告，但新功能开发都在技能包那边进行。MCP 的配置见下面的 Claude Desktop 和 Poke AI 章节。
 
 ### 快速开始
 
