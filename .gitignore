@@ -48,3 +48,13 @@ cloudflare-worker/dist/
 
 # Cloudflare Tunnel URL (changes on each restart)
 .tunnel_url
+.last_tunnel_url
+
+# launchd automation state files
+.automation_status
+
+# Poke AI status snapshots (not for public repo)
+POKE_AI_STATUS.md
+
+# Root-level test runners that belong in archive
+/test_poke_integration.sh
