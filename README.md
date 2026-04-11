@@ -1,6 +1,8 @@
-# Apple Notes AI Search
+# searching-apple-notes — semantic search for Apple Notes, built for Claude Code
 
-> Use AI to search and index your Apple Notes with natural language | 用 AI 自然语言检索你的苹果备忘录
+> Talk to Claude Code in plain English or Chinese, and it answers from your Apple Notes archive — semantically, locally, with no API keys and no MCP setup required. Drop-in skill, fully private, optimized for Chinese-English mixed content via BGE-M3.
+>
+> 用中文或英文跟 Claude Code 说话，它直接从你的 Apple Notes 里给你答案——语义检索、全本地、不需要 API key、不需要配置 MCP。开箱即用的技能包，完全私密，BGE-M3 原生支持中英文混合检索。
 
 [English](#english) | [中文](#中文)
 
@@ -10,9 +12,11 @@
 
 ### What is this?
 
-Turn your Apple Notes into a searchable knowledge base powered by AI. Instead of remembering exact titles, just describe what you're looking for.
+`searching-apple-notes` turns your Apple Notes into a second brain that Claude Code can read and write. You ask a question in natural language, Claude semantically searches your notes (BGE-M3 embeddings + ChromaDB, all local on your Mac), reads the relevant ones, and answers with citations. You never type a search query, you never see a tool call, you never leave your conversation. When you tell Claude to capture an insight, it writes a properly formatted note back into Apple Notes — hashtags and all.
 
-![Search Demo in Claude Desktop.png](https://github.com/yinanli1917-cloud/apple-notes-mcp/blob/7dcb7766ec1c2d099339fc4c0818665d555a263b/images/Search%20Demo%20in%20Claude%20Desktop.png)
+The whole thing runs on your Mac. No API keys. No third-party servers. No data leaving your machine. The only network traffic the project ever generates is the one-time download of BGE-M3 from Hugging Face during initial setup.
+
+![Search Demo in Claude Desktop.png](https://github.com/yinanli1917-cloud/searching-apple-notes/blob/main/images/Search%20Demo%20in%20Claude%20Desktop.png?raw=true)
 
 ### Features
 
@@ -31,6 +35,59 @@ Turn your Apple Notes into a searchable knowledge base powered by AI. Instead of
 
 **2. As an MCP server — for non-Claude-Code users.** If you use Claude Desktop, Cursor, or Poke AI on iMessage, the MCP server in `scripts/server.py` exposes the same search functionality as MCP tools. The MCP path is no longer my primary use case — I still accept PRs and bug reports, but new development happens in the Skill. See the Claude Desktop and Poke AI sections below for MCP setup.
 
+### What it feels like to use
+
+Once installed, the skill is invisible. You just talk to Claude in English or Chinese:
+
+> **You:** Did I take any notes about that book on attention I read last month?
+>
+> **Claude:** *(silently runs `vector_search.py "attention book notes" --after 2026-03-01`)*
+>
+> Yes — you have a note titled "Stolen Focus, chapters 1–3" from March 14, and another titled "fragmented attention vs flow" from March 22. The first captures your reaction to the argument about social media disrupting deep reading. The second is your own elaboration where you note that flow states require a particular kind of friction-free attention that…
+
+> **You:** 帮我找一下我写过的关于产品定位的笔记
+>
+> **Claude:** *(silently runs `vector_search.py "产品定位"`)*
+>
+> 我在你的备忘录里找到 4 条相关的笔记：…
+
+> **You:** Save this whole conversation as a note tagged #strategy
+>
+> **Claude:** *(silently runs `create_note.py "Notes on attention and flow" "..." --folder "Notes"`)*
+>
+> Saved as a new note in your Notes folder with the #strategy tag. You'll see it in Apple Notes within a few seconds.
+
+You never see the tool calls. You just ask, and Claude answers from your actual prior thinking — and writes new thinking back into the same archive.
+
+### FAQ
+
+**How does it search my notes?**
+Your notes are exported to a local SQLite database, then each note is converted into a 1024-dimensional vector by the BGE-M3 embedding model. When you ask a question, your query gets embedded the same way, and ChromaDB finds the notes whose vectors are closest in meaning. This is called *semantic search* — searching for "burnout" finds notes about "exhaustion," "心累," and "running on fumes" even when none of those exact words appear in the query.
+
+**Does it send my notes to OpenAI or any other cloud service?**
+No. Everything runs on your Mac. The BGE-M3 model is downloaded once from Hugging Face during initial setup (about 2 GB), then runs entirely offline. There are no API keys, no telemetry, no third-party servers, and no usage charges. The only cloud component is the *optional* Cloudflare Worker for the Poke-AI-via-iMessage path, which most users don't need.
+
+**Why BGE-M3 instead of OpenAI's text-embedding-3-large?**
+Three reasons. (1) It's free and runs locally. (2) It's bilingual — BGE-M3 was trained heavily on Chinese and outperforms English-only embedders by a wide margin on mixed Chinese-English content. If you take notes in any language other than English, this matters. (3) Privacy — your notes never leave your Mac.
+
+**Does it work with Chinese, Japanese, Korean, or other non-English notes?**
+Yes. BGE-M3 supports 100+ languages and is particularly strong at Chinese and Chinese-English mixed content. You can ask in one language and find notes written in another.
+
+**How is this different from Apple's built-in Notes search?**
+Apple's search is keyword-based — it only finds notes that contain the exact words you typed. This skill is *semantic* — it understands that "burnout" and "exhaustion" mean the same thing, that "心流" and "flow state" are related, and that a question about "founder mental health" should match a note about "startup CEO depression." Apple's search will miss all of these.
+
+**Do I need Claude Desktop, or does Claude Code work?**
+The recommended path is **Claude Code** with the Skill. Claude Desktop works via the MCP server but the MCP path is no longer the primary use case — see the "Two ways to use this" section above.
+
+**How do I keep the index in sync as I add new notes?**
+The skill includes a `sync_index.py` helper that re-exports from Notes.app and incrementally updates the vector index. Only notes modified since the last sync get re-embedded, so it usually finishes in seconds. You can run it manually, schedule it via launchd, or just tell Claude "refresh my notes index" and it will run it for you.
+
+**What about Notion, Evernote, Obsidian, or other note apps?**
+Currently Apple Notes only. The export pipeline depends on AppleScript, which is Apple Notes specific. PRs for other backends are welcome — the search and skill layers are app-agnostic.
+
+**Is it really free?**
+Yes. Free, MIT licensed, no API charges, no subscription. The only cost is disk space (about 2 GB for the BGE-M3 model and another ~50 MB per 1000 notes for the vector index).
+
 ### Quick Start
 
 **Requirements:**
@@ -42,8 +99,8 @@ Turn your Apple Notes into a searchable knowledge base powered by AI. Instead of
 
 ```bash
 # Clone the repo
-git clone https://github.com/yinanli1917-cloud/apple-notes-mcp.git
-cd apple-notes-mcp
+git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git
+cd searching-apple-notes
 
 # Install dependencies
 pip3 install -r requirements.txt
@@ -68,7 +125,7 @@ python3 indexer.py
      "mcpServers": {
        "apple-notes": {
          "command": "python3",
-         "args": ["/Users/YOUR_USERNAME/Documents/apple-notes-mcp/scripts/server.py"]
+         "args": ["/Users/YOUR_USERNAME/searching-apple-notes/scripts/server.py"]
        }
      }
    }
@@ -87,7 +144,7 @@ Search your notes directly from iMessage using Poke AI!
 1. Install [Poke AI](https://poke.com) on your iPhone
 2. Start the services on your Mac:
    ```bash
-   cd ~/Documents/apple-notes-mcp/scripts
+   cd ~/searching-apple-notes/scripts
    ./start_poke_services.sh
    ```
 3. Configure Poke AI with the MCP server URL:
@@ -152,9 +209,11 @@ MIT License © 2025 [Yinan Li](https://github.com/yinanli1917-cloud)
 
 ### 这是什么？
 
-用 AI 把你的苹果备忘录变成可搜索的知识库。不需要记住笔记标题，只要描述你想找什么就行。
+`searching-apple-notes` 把你的苹果备忘录变成 Claude Code 可以读写的第二大脑。你用自然语言问问题，Claude 在本地对你的笔记做语义检索（BGE-M3 嵌入模型 + ChromaDB，全部跑在你的 Mac 上），读出相关的笔记，然后带着引用回答你。你不用敲搜索关键词，不用看到任何工具调用，不用离开对话。当你让 Claude 把某个洞察存下来时，它会用合适的格式把笔记写回 Apple Notes——hashtag 都帮你打好。
 
-![在 Claude Desktop 里的搜索演示](https://github.com/yinanli1917-cloud/apple-notes-mcp/blob/7dcb7766ec1c2d099339fc4c0818665d555a263b/images/Search%20Demo%20in%20Claude%20Desktop.png)
+全部在本地跑。不需要 API key，不依赖任何第三方服务器，你的数据从不离开你的电脑。整个项目只产生一次网络流量：初次安装时从 Hugging Face 下载 BGE-M3 模型。
+
+![在 Claude Desktop 里的搜索演示](https://github.com/yinanli1917-cloud/searching-apple-notes/blob/main/images/Search%20Demo%20in%20Claude%20Desktop.png?raw=true)
 
 ### 特性
 
@@ -173,6 +232,59 @@ MIT License © 2025 [Yinan Li](https://github.com/yinanli1917-cloud)
 
 **2. 作为 MCP 服务器——给不用 Claude Code 的用户。** 如果你用的是 Claude Desktop、Cursor 或者 iMessage 上的 Poke AI，`scripts/server.py` 里的 MCP 服务器把同样的搜索功能暴露成 MCP 工具。MCP 这条路径已经不是我目前的主要使用场景——我仍然接受 PR 和 bug 报告，但新功能开发都在技能包那边进行。MCP 的配置见下面的 Claude Desktop 和 Poke AI 章节。
 
+### 用起来是什么感觉
+
+安装好之后，技能包是隐形的。你就用中文或英文跟 Claude 说话：
+
+> **你：** 我上个月写过关于注意力的那本书的笔记吗？
+>
+> **Claude：** *(在后台调用 `vector_search.py "注意力 书 笔记" --after 2026-03-01`)*
+>
+> 有的——你 3 月 14 日有一篇笔记叫《Stolen Focus 第 1-3 章》，3 月 22 日还有一篇叫《碎片化注意力 vs 心流》。第一篇记录了你对作者关于社交媒体破坏深度阅读这个论点的反应；第二篇是你自己的延伸思考……
+
+> **你：** Help me find notes about product positioning
+>
+> **Claude：** *(在后台调用 `vector_search.py "product positioning"`)*
+>
+> Found 4 relevant notes in your archive: …
+
+> **你：** 把刚才整段对话存成笔记，打 #strategy 标签
+>
+> **Claude：** *(在后台调用 `create_note.py "关于注意力与心流的对话" "..." --folder "Notes"`)*
+>
+> 已经存到你的 Notes 文件夹里，加了 #strategy 标签。几秒内会在 Apple Notes 里看到。
+
+你看不到工具调用。你只是问问题，Claude 用你过去真实的思考来回答——同时把新的思考写回同一个备忘录库。
+
+### 常见问题
+
+**它是怎么搜我的笔记的？**
+你的笔记会被导出到一个本地的 SQLite 数据库，然后每条笔记被 BGE-M3 嵌入模型转换成 1024 维的向量。当你问问题时，你的查询也会被同样地转成向量，ChromaDB 找出意义最接近的笔记。这叫*语义搜索*——搜"职业倦怠"能找到写"心累"、"exhaustion"、"再也撑不住"的笔记，哪怕这些字一个都没出现过。
+
+**它会把我的笔记发送给 OpenAI 或者任何云服务吗？**
+不会。一切都在你的 Mac 上跑。BGE-M3 模型只在初次安装时从 Hugging Face 下载一次（约 2 GB），之后完全离线运行。不需要 API key，没有埋点上报，没有第三方服务器，没有任何使用费。唯一的云端组件是*可选的* Cloudflare Worker（用于 Poke AI iMessage 路径），大多数用户不需要。
+
+**为什么用 BGE-M3 而不是 OpenAI 的 text-embedding-3-large？**
+三个原因。（1）免费且本地运行。（2）它是双语的——BGE-M3 在中文上训练得很重，对中英文混合内容的表现远超纯英文嵌入模型。如果你用中文记笔记，这一点很重要。（3）隐私——你的笔记永远不离开你的 Mac。
+
+**支持中文、日文、韩文或者其他非英文笔记吗？**
+支持。BGE-M3 支持 100+ 种语言，对中文和中英文混合特别强。你可以用一种语言问，找到用另一种语言写的笔记。
+
+**它和 Apple 自带的 Notes 搜索有什么区别？**
+Apple 的搜索是关键词匹配——只能找到包含你输入的精确词的笔记。这个技能是*语义的*——它理解"职业倦怠"和"心累"是一回事，"心流"和"flow state"是相关的，"创业者心理健康"应该匹配到"startup CEO depression"。Apple 自带搜索全部都会漏掉。
+
+**我需要 Claude Desktop 吗？还是 Claude Code 也可以？**
+推荐方案是 **Claude Code + 技能包**。Claude Desktop 通过 MCP 服务器也能用，但 MCP 路径不再是主要使用场景——见上面的"两种使用方式"章节。
+
+**我新加了笔记，索引怎么保持更新？**
+技能包里有个 `sync_index.py` 帮助脚本，会重新从 Notes.app 导出并增量更新向量索引。只有自上次同步以来修改过的笔记会被重新嵌入，通常几秒钟就能跑完。你可以手动运行，也可以用 launchd 定时跑，或者直接告诉 Claude "刷新一下我的笔记索引"，它会帮你跑。
+
+**那 Notion、Evernote、Obsidian 这些呢？**
+目前只支持 Apple Notes。导出流水线依赖 AppleScript，是 Apple Notes 特定的。欢迎为其他后端提 PR——搜索层和技能层与具体笔记应用无关。
+
+**真的免费吗？**
+真的。免费、MIT 协议、没有 API 费用、没有订阅。唯一的开销是磁盘空间（BGE-M3 模型约 2 GB，向量索引每 1000 条笔记约 50 MB）。
+
 ### 快速开始
 
 **前置要求：**
@@ -184,8 +296,8 @@ MIT License © 2025 [Yinan Li](https://github.com/yinanli1917-cloud)
 
 ```bash
 # 克隆项目
-git clone https://github.com/yinanli1917-cloud/apple-notes-mcp.git
-cd apple-notes-mcp
+git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git
+cd searching-apple-notes
 
 # 安装依赖
 pip3 install -r requirements.txt
@@ -210,7 +322,7 @@ python3 indexer.py
      "mcpServers": {
        "apple-notes": {
          "command": "python3",
-         "args": ["/Users/你的用户名/Documents/apple-notes-mcp/scripts/server.py"]
+         "args": ["/Users/你的用户名/searching-apple-notes/scripts/server.py"]
        }
      }
    }
@@ -229,7 +341,7 @@ python3 indexer.py
 1. 在 iPhone 上安装 [Poke AI](https://poke.com)
 2. 在 Mac 上启动服务：
    ```bash
-   cd ~/Documents/apple-notes-mcp/scripts
+   cd ~/searching-apple-notes/scripts
    ./start_poke_services.sh
    ```
 3. 在 Poke AI 中配置 MCP 服务器 URL：

@@ -65,8 +65,8 @@ You never see the tool calls. You just ask, and Claude answers from your actual 
 **Step 1 — set up the parent repository.** This skill depends on the BGE-M3 model and the SQLite-plus-ChromaDB pipeline shipped in the parent repo. Follow the setup section in the [main README](../../README.md):
 
 ```bash
-git clone https://github.com/yinanli1917-cloud/apple-notes-mcp.git
-cd apple-notes-mcp
+git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git
+cd searching-apple-notes
 pip3 install -r requirements.txt
 python3.12 scripts/export_notes_fixed.py    # one-time export
 python3.12 scripts/indexer.py                # one-time vector index build (3-5 min)
@@ -187,8 +187,8 @@ MIT, same as the parent repository.
 **第一步——配置好父仓库。** 本技能依赖父仓库里的 BGE-M3 模型和 SQLite + ChromaDB 流水线。按[主 README](../../README.md) 的安装步骤走一遍：
 
 ```bash
-git clone https://github.com/yinanli1917-cloud/apple-notes-mcp.git
-cd apple-notes-mcp
+git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git
+cd searching-apple-notes
 pip3 install -r requirements.txt
 python3.12 scripts/export_notes_fixed.py    # 一次性导出
 python3.12 scripts/indexer.py                # 一次性建立向量索引（3-5 分钟）

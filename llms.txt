@@ -1,0 +1,45 @@
+# searching-apple-notes
+
+> A Claude Code skill that turns your Apple Notes archive into a semantically searchable second brain. You ask Claude in plain English or Chinese, it searches your notes locally with BGE-M3 embeddings, reads the relevant ones, and answers with citations — no API keys, no MCP setup, fully private.
+
+This project lets users on macOS expose their Apple Notes to Claude Code via a drop-in skill. Search is semantic (BGE-M3 + ChromaDB), local-first (no data leaves the Mac), and bilingual (optimized for Chinese-English mixed content). The skill also lets Claude write new notes back into Apple Notes from a conversation, with native hashtag support.
+
+The repository contains two ways to use the same underlying search engine: a Claude Code Skill (recommended, primary) and an MCP server (legacy, kept for Claude Desktop and Poke AI iMessage users).
+
+## Primary docs
+
+- [Main README](README.md): What the project is, how to install, two usage paths (Skill vs MCP), FAQ, dialogue examples in English and Chinese
+- [Skill README](skills/searching-apple-notes/README.md): Detailed bilingual docs for the Claude Code skill — what it is, why it works, what it feels like to use, install, file layout, the four helper scripts, the native Apple Notes hashtag bridging trick, privacy guarantees
+- [SKILL.md](skills/searching-apple-notes/SKILL.md): The actual instructions Claude Code reads when the skill activates — trigger conditions, available commands, search strategy, dialogue-to-note workflow
+
+## Helper scripts (the skill's four tools)
+
+- [vector_search.py](skills/searching-apple-notes/scripts/vector_search.py): Semantic vector search CLI with BGE-M3 + ChromaDB. Optional filters: tag, folder, date range. Returns JSON.
+- [get_note.py](skills/searching-apple-notes/scripts/get_note.py): Fetch full plain-text content of a single note by Notes.app index when the search snippet isn't enough.
+- [create_note.py](skills/searching-apple-notes/scripts/create_note.py): Create a new Apple Note from a markdown body via AppleScript. Hashtags written as #TagName become real Apple Notes hashtags.
+- [sync_index.py](skills/searching-apple-notes/scripts/sync_index.py): One-shot pipeline — re-export Notes.app to SQLite, bridge native hashtags from NoteStore.sqlite, run incremental vector index update.
+
+## How to install
+
+The recommended path takes about 5 minutes:
+
+1. Clone: `git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git`
+2. Install Python deps: `pip3 install -r requirements.txt`
+3. One-time export: `python3.12 scripts/export_notes_fixed.py`
+4. One-time index build: `python3.12 scripts/indexer.py` (downloads BGE-M3 ~2 GB)
+5. Drop the skill into Claude Code: `cp -r skills/searching-apple-notes ~/.claude/skills/`
+6. Restart Claude Code, ask it to find something in your notes
+
+After install, you don't run any commands — you just talk to Claude.
+
+## What this is NOT
+
+- Not a SaaS product. No accounts, no servers, no subscriptions.
+- Not a search box. Users never type queries directly — Claude handles that.
+- Not a Notion/Obsidian/Evernote tool. Apple Notes only (PRs welcome for other backends).
+- Not OpenAI-dependent. Uses local BGE-M3, not text-embedding-3-large.
+- Not an MCP-first project anymore. The MCP server is preserved for legacy users but new development is in the Skill.
+
+## Keywords for discovery
+
+apple notes search, claude code skill, claude code apple notes, semantic search apple notes, bge-m3 macos, local vector search, chromadb apple notes, second brain mac, personal knowledge management mac, chinese semantic search, bilingual note search, applescript notes, mac note search ai, claude search my notes, save claude conversation to notes
