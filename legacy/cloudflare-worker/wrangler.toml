@@ -19,4 +19,4 @@ new_sqlite_classes = ["AppleNotesMcpAgent"]
 # 环境变量
 [vars]
 ENVIRONMENT = "production"
-LOCAL_API_URL = "https://threshold-duck-monster-doll.trycloudflare.com"
+LOCAL_API_URL = "https://survival-stan-capture-photographs.trycloudflare.com"

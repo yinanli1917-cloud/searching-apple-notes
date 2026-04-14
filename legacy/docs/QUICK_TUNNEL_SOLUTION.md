@@ -104,23 +104,42 @@ ps aux | grep -E "api_server|cloudflared"
 ./start_poke_services.sh
 ```
 
-### 场景 3：想要长期稳定运行
+### 场景 3：想要长期稳定运行（完全自动化）
 
-**不想每次都手动运行脚本？**
+**✅ 已实现完全自动化！**
 
-考虑以下两个方案：
+系统现在会每 5 分钟自动检查并更新 Tunnel URL，**无需任何手动操作**：
 
-**方案 A：创建快捷命令**（推荐）
 ```bash
-# 添加到 ~/.zshrc
-echo 'alias fix-poke="cd ~/Documents/apple-notes-mcp/scripts && ./update_tunnel_url.sh"' >> ~/.zshrc
-source ~/.zshrc
+# 查看自动化服务状态
+launchctl list | grep apple-notes-mcp
+```
 
-# 以后只需运行：
+你会看到两个服务正在运行：
+- `com.apple-notes-mcp.auto-sync` - 每 24 小时自动索引笔记
+- `com.apple-notes-mcp.tunnel-monitor` - 每 5 分钟检查 URL 变化
+
+**自动化做了什么？**
+
+1. ✅ **自动检测服务**：如果 API 服务器或 Tunnel 崩溃，自动重启
+2. ✅ **自动检测 URL**：每 5 分钟检查 Tunnel URL 是否变化
+3. ✅ **自动更新配置**：URL 变化时自动更新 `wrangler.toml`
+4. ✅ **自动部署 Workers**：配置更新后自动部署
+5. ✅ **无缝切换**：Poke AI 无需任何操作，自动恢复连接
+
+**监控日志**：
+```bash
+# 查看自动更新日志
+tail -f ~/Documents/apple-notes-mcp/logs/tunnel_monitor.log
+```
+
+**方案 B：手动快捷命令**（如果需要手动触发）
+```bash
+# 快捷命令已经创建：
 fix-poke
 ```
 
-**方案 B：使用命名隧道**（更稳定但配置复杂）
+**方案 C：使用命名隧道**（更稳定但配置复杂）
 
 如果你有自己的域名，可以配置命名隧道获得固定 URL。参见 [Cloudflare Tunnel 配置指南](CLOUDFLARE_TUNNEL.md)。
 
@@ -136,12 +155,20 @@ fix-poke
 4. **更新配置文件**（使用 `sed` 替换 URL）
 5. **重新部署**（运行 `npx wrangler deploy`）
 
-### 为什么不能自动运行？
+### ✅ 已实现自动运行！
 
-理论上可以配置 LaunchAgent 定期检查并更新，但**不推荐**，因为：
-- ❌ 频繁部署 Workers 可能达到 Cloudflare 限制
-- ❌ URL 变化并不频繁（通常只在重启时）
-- ❌ 手动运行更可控，知道何时更新
+通过 macOS LaunchAgent，系统会每 5 分钟自动检查并更新：
+- ✅ 仅在 URL 变化时部署 Workers（不会频繁部署）
+- ✅ URL 变化时自动检测并更新（无需手动干预）
+- ✅ 后台静默运行，完全透明
+
+**检查自动化状态**：
+```bash
+launchctl list | grep apple-notes-mcp
+# 输出：
+# 78958	0	com.apple-notes-mcp.tunnel-monitor  <- 正在运行
+# -	126	com.apple-notes-mcp.auto-sync         <- 正在运行
+```
 
 ---
 
@@ -157,15 +184,19 @@ Cloudflare 免费版有以下限制：
 - ✅ 手动按需运行脚本（几秒钟一次）
 - ❌ 不要配置自动定时运行（可能超限）
 
-### 何时需要运行脚本？
+### 何时需要手动操作？
 
-只在以下情况运行：
-1. Mac 重启后
-2. 网络重新连接后（WiFi 切换）
-3. Poke AI 报错 530 时
-4. `start_poke_services.sh` 重新启动后
+**✅ 完全自动化后，99% 情况下无需手动操作！**
 
-**不需要每天运行**，只在 Tunnel URL 变化时运行。
+系统会自动处理：
+- ✅ Mac 重启后（自动检测并更新）
+- ✅ 网络重新连接后（自动检测并更新）
+- ✅ Poke AI 报错 530 时（5分钟内自动修复）
+- ✅ 服务崩溃时（自动重启）
+
+**唯一需要手动的情况**：
+- 首次 Mac 启动时运行 `./start_poke_services.sh`（以后会添加开机自启）
+- 如果想立即修复而不等 5 分钟，可以运行 `fix-poke`
 
 ---
 

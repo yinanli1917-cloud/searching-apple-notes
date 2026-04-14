@@ -17,6 +17,9 @@ interface Env {
   LOCAL_API_URL: string;
 }
 
+// 全局变量存储 API URL（workaround for McpAgent env access）
+let GLOBAL_API_URL = 'https://survival-stan-capture-photographs.trycloudflare.com';
+
 // 笔记搜索结果类型
 interface SearchResult {
   title: string;
@@ -40,10 +43,10 @@ interface StatsResponse {
 }
 
 // 创建 Apple Notes MCP Agent
-export class AppleNotesMcpAgent extends McpAgent {
+export class AppleNotesMcpAgent extends McpAgent<Env> {
   server = new McpServer({
     name: 'apple-notes-search',
-    version: '1.0.0',
+    version: '1.0.1',  // Bumped version to force cache clear
   });
 
   async init() {
@@ -57,8 +60,12 @@ export class AppleNotesMcpAgent extends McpAgent {
       },
       async ({ query, limit }) => {
         try {
-          // 从环境变量获取本地 API URL
-          const apiUrl = this.env.LOCAL_API_URL || 'http://10.0.0.189:8001';
+          // 优先使用 this.env，fallback 到全局变量
+          const apiUrl = this.env?.LOCAL_API_URL || GLOBAL_API_URL;
+
+          console.log('[DEBUG] this.env?.LOCAL_API_URL:', this.env?.LOCAL_API_URL);
+          console.log('[DEBUG] GLOBAL_API_URL:', GLOBAL_API_URL);
+          console.log('[DEBUG] Using apiUrl:', apiUrl);
 
           // 调用本地搜索 API
           const response = await fetch(`${apiUrl}/search`, {
@@ -131,7 +138,7 @@ export class AppleNotesMcpAgent extends McpAgent {
       {},
       async () => {
         try {
-          const apiUrl = this.env.LOCAL_API_URL || 'http://10.0.0.189:8001';
+          const apiUrl = this.env?.LOCAL_API_URL || GLOBAL_API_URL;
 
           const response = await fetch(`${apiUrl}/stats`);
 
@@ -200,6 +207,10 @@ function healthCheck(): Response {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    // 设置全局 API URL（从环境变量）
+    GLOBAL_API_URL = env.LOCAL_API_URL || 'http://10.0.0.189:8001';
+    console.log('[WORKER] Setting GLOBAL_API_URL to:', GLOBAL_API_URL);
 
     // 健康检查端点
     if (url.pathname === '/' || url.pathname === '/health') {

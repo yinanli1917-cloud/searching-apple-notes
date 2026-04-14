@@ -1,5 +1,7 @@
 # searching-apple-notes — semantic search for Apple Notes, built for Claude Code
 
+![searching-apple-notes banner](docs/assets/social-banner.png)
+
 > Talk to Claude Code in plain English or Chinese, and it answers from your Apple Notes archive — semantically, locally, with no API keys and no MCP setup required. Drop-in skill, fully private, optimized for Chinese-English mixed content via BGE-M3.
 >
 > 用中文或英文跟 Claude Code 说话，它直接从你的 Apple Notes 里给你答案——语义检索、全本地、不需要 API key、不需要配置 MCP。开箱即用的技能包，完全私密，BGE-M3 原生支持中英文混合检索。
