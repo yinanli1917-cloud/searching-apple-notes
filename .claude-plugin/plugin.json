@@ -1,0 +1,12 @@
+{
+  "name": "searching-apple-notes",
+  "version": "1.0.0",
+  "description": "Semantic search and note creation for Apple Notes, powered by BGE-M3 embeddings and ChromaDB. Search your notes in natural language (English, Chinese, 100+ languages), get answers with citations, and write notes back — all local, no API keys.",
+  "author": {
+    "name": "Yinan Li",
+    "url": "https://github.com/yinanli1917-cloud"
+  },
+  "homepage": "https://github.com/yinanli1917-cloud/searching-apple-notes",
+  "repository": "https://github.com/yinanli1917-cloud/searching-apple-notes",
+  "license": "MIT"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "searching-apple-notes",
+  "description": "Semantic search and note creation for Apple Notes",
+  "plugins": [
+    {
+      "name": "searching-apple-notes",
+      "description": "Semantic search and note creation for Apple Notes, powered by BGE-M3 embeddings and ChromaDB. Search your notes in natural language (English, Chinese, 100+ languages), get answers with citations, and write notes back — all local, no API keys.",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/yinanli1917-cloud/searching-apple-notes.git"
+      },
+      "homepage": "https://github.com/yinanli1917-cloud/searching-apple-notes"
+    }
+  ]
+}

@@ -58,3 +58,4 @@ POKE_AI_STATUS.md
 
 # Root-level test runners that belong in archive
 /test_poke_integration.sh
+.nightcrawl/

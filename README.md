@@ -29,6 +29,30 @@ The whole thing runs on your Mac. No API keys. No third-party servers. No data l
 - **Privacy First**: All data stays local — no API keys, no third-party servers
 - **MCP Server** *(alternative)*: For Claude Desktop and Poke AI users who don't use Claude Code
 
+### Install
+
+**Option 1: Claude Code Plugin (recommended)**
+
+```
+/plugin marketplace add yinanli1917-cloud/searching-apple-notes
+/plugin install searching-apple-notes@searching-apple-notes
+```
+
+Then run the one-time index build:
+```bash
+pip install -r requirements.txt
+python scripts/indexer.py
+```
+
+**Option 2: Manual skill install**
+
+```bash
+git clone https://github.com/yinanli1917-cloud/searching-apple-notes.git ~/.claude/skills/searching-apple-notes
+cd ~/.claude/skills/searching-apple-notes
+pip install -r requirements.txt
+python scripts/indexer.py
+```
+
 ### Two ways to use this
 
 **1. As a Claude Code Skill — recommended.** This is the primary path. The skill teaches Claude Code *when* to search, *how* to phrase queries, *how* to interpret results, and *when* to save new insights back into Apple Notes. You install it once, then talk to Claude normally — no commands, no tool calls, no search box.
